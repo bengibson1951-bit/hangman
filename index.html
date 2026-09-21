@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#7ec8ff" />
+  <title>Hangman Spelling</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- HOME -->
+  <section data-screen="home" class="active">
+    <div class="hero">
+      <div class="mascot">🐙</div>
+      <h1>Hangman!</h1>
+      <p class="tagline">Spell the word, save the day ⭐</p>
+    </div>
+
+    <div class="stack">
+      <button class="big-btn btn-coral" id="btn-my-words">📝 My Words</button>
+      <button class="big-btn btn-mint" id="btn-random">🎲 Random Words</button>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">How do you want your clue?</h2>
+      <div class="segmented" id="clue-mode">
+        <button data-mode="sv">🇸🇪<span>Swedish</span></button>
+        <button data-mode="def">💡<span>Meaning</span></button>
+        <button data-mode="classic">🙈<span>No clue</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MY WORD LISTS -->
+  <section data-screen="lists">
+    <header class="top-bar">
+      <button class="back-btn" data-back="home">‹ Back</button>
+      <h2>My Words</h2>
+    </header>
+    <div id="lists-container" class="stack"></div>
+    <button class="big-btn btn-sunny" id="btn-new-list">＋ New list</button>
+    <p class="empty-note" id="lists-empty" hidden>No lists yet! Tap <b>New list</b> and add this week's spelling words. 🌈</p>
+  </section>
+
+  <!-- EDIT LIST -->
+  <section data-screen="edit-list">
+    <header class="top-bar">
+      <button class="back-btn" data-back="lists">‹ Back</button>
+      <h2>Edit list</h2>
+    </header>
+    <div class="card">
+      <label class="field-label" for="list-name">List name</label>
+      <input type="text" id="list-name" placeholder="Week 38 words" maxlength="40" />
+    </div>
+    <div class="card">
+      <h2 class="card-title">Words</h2>
+      <div id="word-rows"></div>
+      <form id="add-word-form" class="add-word">
+        <input type="text" id="new-en" placeholder="English word" autocomplete="off" autocapitalize="characters" required />
+        <input type="text" id="new-sv" placeholder="Swedish (optional)" autocomplete="off" />
+        <input type="text" id="new-hint" placeholder="Hint (optional)" autocomplete="off" />
+        <p class="form-error" id="word-error" hidden></p>
+        <button type="submit" class="big-btn btn-mint small">＋ Add word</button>
+      </form>
+    </div>
+    <button class="danger-btn" id="btn-delete-list">🗑 Delete this list</button>
+  </section>
+
+  <!-- DIFFICULTY -->
+  <section data-screen="difficulty">
+    <header class="top-bar">
+      <button class="back-btn" data-back="home">‹ Back</button>
+      <h2>Pick your level</h2>
+    </header>
+    <div class="stack" id="difficulty-buttons">
+      <button class="big-btn btn-mint" data-difficulty="easy">🐣 Easy</button>
+      <button class="big-btn btn-sunny" data-difficulty="medium">🐥 Medium</button>
+      <button class="big-btn btn-coral" data-difficulty="hard">🦉 Hard</button>
+      <button class="big-btn btn-grape" data-difficulty="mixed">🎲 Mix it up!</button>
+    </div>
+  </section>
+
+  <!-- PLAY -->
+  <section data-screen="play">
+    <header class="top-bar">
+      <button class="back-btn" id="play-back">‹ Quit</button>
+      <div class="score" id="score">⭐ 0 &nbsp; 🔥 0</div>
+    </header>
+
+    <div class="clue-banner" id="clue-banner"></div>
+
+    <div class="gallows-wrap">
+      <svg id="gallows" viewBox="0 0 200 180" aria-hidden="true">
+        <!-- 8 parts, revealed one per wrong guess -->
+        <g id="p1" class="part"><path d="M20 170 Q100 160 180 170" class="ln thick" /></g>
+        <g id="p2" class="part"><line x1="50" y1="168" x2="50" y2="20" class="ln thick" /></g>
+        <g id="p3" class="part"><line x1="48" y1="22" x2="140" y2="22" class="ln thick" /><line x1="50" y1="55" x2="83" y2="22" class="ln" /></g>
+        <g id="p4" class="part"><line x1="138" y1="22" x2="138" y2="48" class="ln" /></g>
+        <g id="p5" class="part">
+          <circle cx="138" cy="64" r="16" class="head" />
+          <g class="face-happy">
+            <circle cx="132" cy="61" r="2" class="dot" />
+            <circle cx="144" cy="61" r="2" class="dot" />
+            <path d="M131 69 Q138 75 145 69" class="smile" />
+          </g>
+          <g class="face-oops">
+            <line x1="130" y1="59" x2="135" y2="63" class="xeye" /><line x1="135" y1="59" x2="130" y2="63" class="xeye" />
+            <line x1="141" y1="59" x2="146" y2="63" class="xeye" /><line x1="146" y1="59" x2="141" y2="63" class="xeye" />
+            <circle cx="138" cy="71" r="3" class="omouth" />
+          </g>
+        </g>
+        <g id="p6" class="part"><line x1="138" y1="80" x2="138" y2="118" class="ln body" /></g>
+        <g id="p7" class="part"><path d="M138 90 L120 106" class="ln" /><path d="M138 90 L156 106" class="ln" /></g>
+        <g id="p8" class="part"><path d="M138 118 L124 142" class="ln" /><path d="M138 118 L152 142" class="ln" /></g>
+      </svg>
+      <div class="wrong-left" id="wrong-left"></div>
+    </div>
+
+    <div class="word-blanks" id="word-blanks"></div>
+
+    <div class="end-banner" id="end-banner" hidden>
+      <div class="end-emoji" id="end-emoji"></div>
+      <div class="end-title" id="end-title"></div>
+      <div class="end-word" id="end-word"></div>
+      <div class="end-extra" id="end-extra"></div>
+      <button class="big-btn btn-sunny" id="btn-next">Next word ▶</button>
+    </div>
+
+    <div class="keyboard" id="keyboard"></div>
+  </section>
+
+  <!-- LOADING / ERROR -->
+  <section data-screen="error">
+    <div class="hero"><div class="mascot">😵</div><h2 id="error-msg">Oops, something went wrong.</h2></div>
+    <button class="big-btn btn-sunny" id="btn-retry">Try again</button>
+  </section>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
