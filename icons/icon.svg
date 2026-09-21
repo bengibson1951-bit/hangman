@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7ec8ff"/>
+      <stop offset="1" stop-color="#4aa8ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="110" fill="url(#bg)"/>
+  <g transform="rotate(-6 256 276)">
+    <rect x="126" y="146" width="260" height="260" rx="48" fill="#ffffff"/>
+    <rect x="126" y="366" width="260" height="40" rx="20" fill="#36c26e"/>
+    <text x="256" y="330" font-family="Comic Sans MS, Segoe UI, sans-serif" font-size="180" font-weight="bold" fill="#2b3a55" text-anchor="middle">A</text>
+  </g>
+  <text x="416" y="130" font-size="80" text-anchor="middle">⭐</text>
+</svg>
