@@ -1,4 +1,4 @@
-const CACHE = "hangman-v2";
+const CACHE = "hangman-v3";
 const ASSETS = [
   ".",
   "index.html",

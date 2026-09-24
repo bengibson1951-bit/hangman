@@ -32,7 +32,7 @@ A custom word without the needed clue data falls back to classic for that round.
 Also chosen on the home screen:
 
 - **Any order** — normal hangman: guess letters in any order, 8 wrong guesses.
-- **In order · 3 ❤️** — real spelling practice: letters must be tapped left to right (the next blank bounces). A wrong tap breaks one of 3 hearts; losing all 3 ends the run. Score is how many words she completes in a run, and the all-time best run is saved and shown on the home screen.
+- **In order · 5 ❤️** — real spelling practice: letters must be tapped left to right (the next blank bounces). A wrong tap breaks one of 5 hearts; losing all 5 ends the run. Score is how many words she completes in a run, and the all-time best run is saved and shown on the home screen.
 
 ## Word list
 

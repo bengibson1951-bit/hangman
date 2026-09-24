@@ -28,7 +28,7 @@ export function revealed(state) {
 
 // --- In-order spelling mode ---
 
-export const ORDER_LIVES = 3;
+export const ORDER_LIVES = 5;
 
 export function createOrderGame(word) {
   return { word: word.toUpperCase(), pos: 0, lives: ORDER_LIVES, status: "playing" };
