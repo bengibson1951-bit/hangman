@@ -1,6 +1,7 @@
 // DOM wiring + localStorage. All game rules live in game.js.
 import {
   MAX_WRONG, createGame, guessLetter, revealed,
+  ORDER_LIVES, createOrderGame, guessOrdered,
   pickWord, pickFromList, resolveClue, filterByLevel,
 } from "./game.js";
 
@@ -58,10 +59,36 @@ $("clue-mode").addEventListener("click", (e) => {
 });
 renderClueMode();
 
+// --- Play style ---
+let playStyle = load("hangman.playStyle", "any");
+function renderPlayStyle() {
+  $("play-style").querySelectorAll("button").forEach((b) => {
+    b.classList.toggle("selected", b.dataset.style === playStyle);
+  });
+}
+$("play-style").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  playStyle = b.dataset.style;
+  save("hangman.playStyle", playStyle);
+  renderPlayStyle();
+});
+renderPlayStyle();
+
+function renderBestLine() {
+  const best = load("hangman.orderBest", 0);
+  const el = $("best-line");
+  el.hidden = best <= 0;
+  el.textContent = `🏆 Best in-order run: ${best} ${best === 1 ? "word" : "words"}`;
+}
+renderBestLine();
+
 // --- Session score ---
 const score = { solved: 0, streak: 0 };
+let runCount = 0; // words completed in the current in-order run
 function renderScore() {
-  $("score").innerHTML = `⭐ ${score.solved} &nbsp; 🔥 ${score.streak}`;
+  const run = playStyle === "order" ? `📝 ${runCount} &nbsp; ` : "";
+  $("score").innerHTML = `${run}⭐ ${score.solved} &nbsp; 🔥 ${score.streak}`;
 }
 
 // --- Gameplay ---
@@ -78,7 +105,7 @@ function startRound(entry, next, solvedCb, backTo) {
   nextFn = next;
   onSolved = solvedCb;
   quitTo = backTo;
-  game = createGame(entry.en);
+  game = playStyle === "order" ? createOrderGame(entry.en) : createGame(entry.en);
 
   const clue = resolveClue(entry, clueMode);
   const banner = $("clue-banner");
@@ -110,7 +137,20 @@ function buildKeyboard() {
     b.textContent = l;
     b.dataset.letter = l;
     b.addEventListener("click", () => {
-      game = guessLetter(game, l);
+      if (playStyle === "order") {
+        const before = game.lives;
+        game = guessOrdered(game, l);
+        if (game.lives < before) {
+          b.classList.add("flash");
+          setTimeout(() => b.classList.remove("flash"), 400);
+          const wb = $("word-blanks");
+          wb.classList.remove("shake");
+          void wb.offsetWidth; // restart the animation
+          wb.classList.add("shake");
+        }
+      } else {
+        game = guessLetter(game, l);
+      }
       renderRound();
     });
     kb.appendChild(b);
@@ -118,30 +158,42 @@ function buildKeyboard() {
 }
 
 function renderRound() {
+  const order = playStyle === "order";
+
   // Word blanks
   const blanks = $("word-blanks");
   blanks.innerHTML = "";
-  for (const c of revealed(game)) {
+  const letters = order
+    ? [...game.word].map((c, i) => (i < game.pos ? c : "_"))
+    : revealed(game);
+  letters.forEach((c, i) => {
     const d = document.createElement("div");
     d.className = "blank" + (c === "_" ? "" : " filled");
+    if (order && i === game.pos && game.status === "playing") d.classList.add("next");
     d.textContent = c === "_" ? "" : c;
     blanks.appendChild(d);
-  }
-
-  // Keyboard states
-  $("keyboard").querySelectorAll("button").forEach((b) => {
-    const l = b.dataset.letter;
-    if (game.guessed.includes(l)) {
-      b.disabled = true;
-      b.classList.add(game.word.includes(l) ? "hit" : "miss");
-    }
   });
 
-  // Figure
+  // Keyboard states (any-order only; in-order keys stay live for repeat letters)
+  if (!order) {
+    $("keyboard").querySelectorAll("button").forEach((b) => {
+      const l = b.dataset.letter;
+      if (game.guessed.includes(l)) {
+        b.disabled = true;
+        b.classList.add(game.word.includes(l) ? "hit" : "miss");
+      }
+    });
+  }
+
+  // Figure + lives
   const parts = $("gallows").querySelectorAll(".part");
-  parts.forEach((p, i) => p.classList.toggle("shown", i < game.wrongCount));
-  const left = MAX_WRONG - game.wrongCount;
-  $("wrong-left").textContent = "❤️ " + left;
+  const wrongParts = order
+    ? Math.ceil((8 * (ORDER_LIVES - game.lives)) / ORDER_LIVES)
+    : game.wrongCount;
+  parts.forEach((p, i) => p.classList.toggle("shown", i < wrongParts));
+  $("wrong-left").textContent = order
+    ? "❤️".repeat(game.lives) + "💔".repeat(ORDER_LIVES - game.lives)
+    : "❤️ " + (MAX_WRONG - game.wrongCount);
 
   if (game.status !== "playing") endRound();
 }
@@ -153,13 +205,28 @@ function endRound() {
   banner.classList.add(won ? "win" : "lose");
   $("keyboard").hidden = true;
 
+  const order = playStyle === "order";
   $("end-emoji").textContent = won
     ? WIN_EMOJI[Math.floor(Math.random() * WIN_EMOJI.length)]
     : "💙";
-  $("end-title").textContent = won ? "You did it!" : "Ohh, so close!";
+  $("end-title").textContent = won ? "You did it!" : order ? "Run over!" : "Ohh, so close!";
   $("end-word").textContent = currentEntry.en;
 
   const extras = [];
+  if (order && won) runCount += 1;
+  if (order && !won) {
+    const best = load("hangman.orderBest", 0);
+    let runMsg = `You spelled ${runCount} ${runCount === 1 ? "word" : "words"} this run!`;
+    if (runCount > best) {
+      save("hangman.orderBest", runCount);
+      renderBestLine();
+      runMsg += " New record! 🏆";
+    } else if (best > 0) {
+      runMsg += ` 🏆 Best: ${best}`;
+    }
+    extras.push(runMsg);
+    runCount = 0; // next word starts a fresh run
+  }
   if (currentEntry.sv) extras.push(`🇸🇪 ${currentEntry.sv}`);
   const def = currentEntry.def ?? currentEntry.hint;
   if (def) extras.push(def);
@@ -186,8 +253,13 @@ function endRound() {
 
 $("btn-next").addEventListener("click", () => nextFn?.());
 $("play-back").addEventListener("click", () => {
+  runCount = 0; // quitting ends the in-order run
   if (quitTo === "lists") renderLists();
   show(quitTo);
+});
+
+$("word-blanks").addEventListener("animationend", (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove("shake");
 });
 
 function esc(s) {
@@ -220,6 +292,7 @@ $("difficulty-buttons").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-difficulty]");
   if (!b) return;
   save("hangman.difficulty", b.dataset.difficulty);
+  runCount = 0; // entering play starts a fresh in-order run
   startRandom(b.dataset.difficulty);
 });
 
@@ -266,7 +339,10 @@ function renderLists() {
     info.className = "list-info";
     info.innerHTML = `<div class="list-name">${esc(list.name)}</div>
       <div class="list-progress">${list.words.length} words · ${solved}/${list.words.length} solved ⭐</div>`;
-    info.addEventListener("click", () => playList(list.id));
+    info.addEventListener("click", () => {
+      runCount = 0; // entering play starts a fresh in-order run
+      playList(list.id);
+    });
 
     const edit = document.createElement("button");
     edit.className = "icon-btn";

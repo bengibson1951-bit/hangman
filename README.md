@@ -27,6 +27,13 @@ Chosen on the home screen (remembered between sessions):
 
 A custom word without the needed clue data falls back to classic for that round. 8 wrong guesses lose the round; the friendly figure only looks dizzy, never grim.
 
+## Play styles
+
+Also chosen on the home screen:
+
+- **Any order** — normal hangman: guess letters in any order, 8 wrong guesses.
+- **In order · 3 ❤️** — real spelling practice: letters must be tapped left to right (the next blank bounces). A wrong tap breaks one of 3 hearts; losing all 3 ends the run. Score is how many words she completes in a run, and the all-time best run is saved and shown on the home screen.
+
 ## Word list
 
 `words.json` — each entry is `{ "en", "sv", "def", "level" }` (level 1–3). After editing, check it:
