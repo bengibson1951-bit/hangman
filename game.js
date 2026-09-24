@@ -26,6 +26,25 @@ export function revealed(state) {
   return [...state.word].map((c) => (state.guessed.includes(c) ? c : "_"));
 }
 
+// --- In-order spelling mode ---
+
+export const ORDER_LIVES = 3;
+
+export function createOrderGame(word) {
+  return { word: word.toUpperCase(), pos: 0, lives: ORDER_LIVES, status: "playing" };
+}
+
+export function guessOrdered(state, letter) {
+  if (state.status !== "playing") return state;
+  const l = letter.toUpperCase();
+  if (state.word[state.pos] === l) {
+    const pos = state.pos + 1;
+    return { ...state, pos, status: pos === state.word.length ? "won" : "playing" };
+  }
+  const lives = state.lives - 1;
+  return { ...state, lives, status: lives === 0 ? "lost" : "playing" };
+}
+
 // --- Word selection ---
 
 export function pickWord(pool, recent, rng = Math.random) {
